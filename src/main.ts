@@ -2,6 +2,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import hostRoute from './routes/host.route';
 
 const app: Express = express();
 
@@ -14,11 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 // enable cors
 app.use(cors());
 app.options('*', cors());
+app.use('/host', hostRoute);
 
 app.get('/', async (_: Request, res: Response) => {
   return res.json({ message: 'Welcome to API 2' });
 });
 
-app.listen(4000, () => {
-  console.log('listening for requests on port 4000');
+app.listen(3000, () => {
+  console.log('listening for requests on port 3000');
 });
