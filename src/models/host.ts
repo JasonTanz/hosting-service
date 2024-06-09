@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
 
-    containerId: {
+    containerName: {
       type: DataTypes.STRING,
       allowNull: false,
     },

@@ -20,32 +20,19 @@ const pullImage = async (image): Promise<void> => {
   });
 };
 
-const checkIfContainerExists = async (containerId) => {
+const getContainerByName = async (containerName) => {
   try {
-    const container = await docker.getContainer(containerId);
+    const containers = await docker.listContainers({
+      all: true,
+    });
+    const findContainer = containers.find(
+      (c) => c.Names[0] === `/${containerName}`,
+    );
+    const container = await docker.getContainer(findContainer.Id);
     const data = await container.inspect();
     return { container, data };
   } catch (error) {
     return null;
-  }
-};
-
-const startOrCreate = ({ buildCommand, startCommand, host }) => {
-  try {
-    const container = docker.getContainer(host.containerId);
-    if (container.container_id) {
-      container.start();
-    }
-
-    return constructDocker({
-      githubUrl: host.githubUrl,
-      buildCommand,
-      startCommand,
-      port: host.port,
-    });
-  } catch (error) {
-    logger.error('Error starting container', error);
-    return [error, null];
   }
 };
 
@@ -54,6 +41,7 @@ const constructDocker = async ({
   buildCommand,
   startCommand,
   port,
+  servicePort = 3000,
 }) => {
   const repoName = retrieveRepoName(githubUrl);
   const dockerFile = constructDockerFile({
@@ -91,17 +79,17 @@ const constructDocker = async ({
       );
     });
 
-    logger.info('Sucessfully built image', `${containerName}-image`);
+    logger.info('Successfully built image', `${containerName}-image`);
 
     const container = await docker.createContainer({
       Image: `${containerName}-image`,
-      name: containerName,
+      name: `${containerName}`,
       ExposedPorts: {
-        '3000/tcp': {},
+        [`${servicePort}/tcp`]: {},
       },
       HostConfig: {
         PortBindings: {
-          '3000/tcp': [
+          [`${servicePort}/tcp`]: [
             {
               HostPort: port.toString(),
             },
@@ -114,7 +102,7 @@ const constructDocker = async ({
 
     const url = constructURL(port);
 
-    return [null, { url, containerId: container.id }];
+    return [null, { url, containerName }];
   } catch (err) {
     console.log('error in building image', err);
   }
@@ -123,6 +111,5 @@ const constructDocker = async ({
 export default {
   pullImage,
   constructDocker,
-  startOrCreate,
-  checkIfContainerExists,
+  getContainerByName,
 };

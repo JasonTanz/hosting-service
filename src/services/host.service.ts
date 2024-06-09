@@ -46,12 +46,12 @@ const getHostByRepoUrl = async (
   }
 };
 
-const getHostByContainerId = async (
-  containerId: string,
+const getHostByContainerName = async (
+  containerName: string,
 ): Promise<ServiceResponse<THost>> => {
   try {
     const host = await db.hosts.findOne({
-      where: { containerId },
+      where: { containerName },
     });
 
     logger.info('Host found by container id', host);
@@ -65,6 +65,6 @@ const getHostByContainerId = async (
 export default {
   getExistingPorts,
   create,
-  getHostByContainerId,
+  getHostByContainerName,
   getHostByRepoUrl,
 };

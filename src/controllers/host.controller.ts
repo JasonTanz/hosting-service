@@ -1,5 +1,10 @@
 import { logger } from '../config/logger';
-import { constructRandomPorts, constructURL } from '../utils/helper';
+import {
+  constructContainerName,
+  constructRandomPorts,
+  constructURL,
+  retrieveRepoName,
+} from '../utils/helper';
 import hostService from '../services/host.service';
 import dockerService from '../services/docker.service';
 import { containerSchema, hostSchema } from '../schema';
@@ -9,7 +14,7 @@ const createHost = async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { githubUrl, buildCommand, startCommand } = value;
+  const { githubUrl, buildCommand, startCommand, servicePort = 3000 } = value;
   try {
     const [err, ports] = await hostService.getExistingPorts();
 
@@ -35,6 +40,7 @@ const createHost = async (req, res) => {
         buildCommand,
         startCommand,
         port: availablePorts,
+        servicePort,
       });
 
       if (err) {
@@ -44,10 +50,13 @@ const createHost = async (req, res) => {
         });
       }
 
+      const repoName = retrieveRepoName(githubUrl);
+      const containerName = constructContainerName(repoName, availablePorts);
+
       const newHost = await hostService.create({
-        containerId: host.containerId,
-        port: availablePorts,
         githubUrl,
+        containerName,
+        port: availablePorts,
       });
 
       if (newHost[0]) {
@@ -78,14 +87,14 @@ const createHost = async (req, res) => {
   }
 };
 
-const getHostByContainerId = async (req, res) => {
+const getHostByContainerName = async (req, res) => {
   const { error, value } = containerSchema.validate(req.params);
   if (error) {
     return res.status(400).json({ message: error.details[0].message });
   }
-  const { containerId } = value;
+  const { containerName } = value;
   try {
-    const [err, host] = await hostService.getHostByContainerId(containerId);
+    const [err, host] = await hostService.getHostByContainerName(containerName);
     if (err) {
       return res.status(500).json({
         status: false,
@@ -108,4 +117,4 @@ const getHostByContainerId = async (req, res) => {
   }
 };
 
-export default { createHost, getHostByContainerId };
+export default { createHost, getHostByContainerName };

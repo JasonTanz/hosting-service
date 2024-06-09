@@ -11,7 +11,7 @@ const getExistingHost = async (req, res, next) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { githubUrl, buildCommand, startCommand } = value;
+  const { githubUrl, buildCommand, startCommand, servicePort = 3000 } = value;
   try {
     const [err, host] = await hostService.getHostByRepoUrl(githubUrl);
     if (err) {
@@ -20,15 +20,12 @@ const getExistingHost = async (req, res, next) => {
         message: `Error getting host by repo url - ${err}`,
       });
     }
-    console.log(host);
     if (!isNull(host)) {
       logger.info('Host found by repo url', host);
 
-      const existingContainer = await dockerService.checkIfContainerExists(
-        host.containerId,
+      const existingContainer = await dockerService.getContainerByName(
+        host.containerName,
       );
-
-      console.log('existing--------->', existingContainer);
 
       if (existingContainer?.container.id) {
         logger.info('Existing container found', existingContainer);
@@ -37,7 +34,7 @@ const getExistingHost = async (req, res, next) => {
             status: true,
             message: 'Existing container found',
             url: constructURL(host.port),
-            containerId: host.containerId,
+            containerName: host.containerName,
           });
         }
         await existingContainer?.container.start();
@@ -45,7 +42,7 @@ const getExistingHost = async (req, res, next) => {
           status: true,
           message: 'Existing container found',
           url: constructURL(host.port),
-          containerId: host.containerId,
+          containerName: host.containerName,
         });
       }
       logger.info('Existing container not found, creating new container');
@@ -54,6 +51,7 @@ const getExistingHost = async (req, res, next) => {
         buildCommand,
         startCommand,
         port: host.port,
+        servicePort,
       });
 
       if (err) {

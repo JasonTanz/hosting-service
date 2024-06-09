@@ -1,7 +1,7 @@
 export type THost = {
   id: string;
   githubUrl: string;
-  containerId: string;
+  containerName: string;
   port: number;
   createdAt: Date;
   updatedAt: Date;

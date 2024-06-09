@@ -8,6 +8,6 @@ router.post(
   hostMiddleware.getExistingHost,
   hostController.createHost,
 );
-router.get('/:containerId', hostController.getHostByContainerId);
+router.get('/:containerName', hostController.getHostByContainerName);
 
 export default router;

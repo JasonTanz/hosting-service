@@ -16,7 +16,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
 
-      containerId: {
+      containerName: {
         allowNull: false,
         type: Sequelize.STRING,
       },

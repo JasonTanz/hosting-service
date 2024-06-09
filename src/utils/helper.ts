@@ -64,11 +64,11 @@ export const constructDockerFile = ({
 
   WORKDIR /app/${repoName}
 
-  RUN ${buildCommand}
+  RUN ${buildCommand || 'npm install'}
 
   EXPOSE 3000
 
-  CMD ${startCommand} 
+  CMD ${startCommand || 'npm start'} 
   `;
 };
 
